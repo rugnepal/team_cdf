@@ -1,0 +1,115 @@
+
+---
+title: "Hypertension Data Viz"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readr)
+library(ggplot2)
+library(plotly)
+library(tidyverse)
+library(dplyr)
+```
+# Home
+## column {data-width = 500}
+
+
+### Hypertension
+```{r}
+
+```
+
+
+
+
+# Diseases
+## Column {data-width=3000, .tabset}
+-----------------------------------------------------------------------
+
+
+### Age Group/Gender
+
+```{r}
+
+```
+### Sub-types of Disease
+
+```{r}
+hypertension_subtype <- read_csv("C:/Users/Dell/Downloads/hypertension/hypertension_subtype.csv")
+subtype <- hypertension_subtype%>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Hypertension Patients- Subtype", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+subtype
+```
+### Comorbidities
+
+```{r}
+hypertension_comorbidities<-read_csv("C:/Users/Dell/Downloads/hypertension/hypertension_comorbidities.csv")
+comorbidities<- hypertension_comorbidities%>% 
+  group_by(label2) %>% 
+  plot_ly(labels = ~label2,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Hypertension Patients- Comorbodities", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+comorbidities
+```
+### Symptoms 
+
+```{r}
+hypertension_symptoms <- read_csv("C:/Users/Dell/Downloads/hypertension/hypertension_symptoms.csv")
+hypertension_symptoms$label<- reorder(x = hypertension_symptoms$label, X= hypertension_symptoms$count)
+hypertension_symptoms$label <- with(hypertension_symptoms, reorder(label, count))
+colnames(hypertension_symptoms)[colnames(hypertension_symptoms)== "label"] <- "Symptoms"
+data <- hypertension_symptoms %>% 
+   #rename(symp= "label")
+   ggplot(aes(x = count, y = Symptoms,fill = Symptoms))+
+   geom_col()+
+   labs(title = "Symptoms of Patients")
+ggplotly(data)
+```
+### Drug Usage
+
+```{r}
+hypertension_drug_usage <-read_csv("C:/Users/Dell/Downloads/hypertension/hypertension_drug_usage.csv")
+drug_usage <- hypertension_drug_usage %>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Hypertension Patients- Drug Usage", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+drug_usage
+```
+### Treatment Phase Drug
+
+```{r}
+
+```
+### Treatment Journey
+
+```{r}
+
+```
+
+
+
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+
+
+
+
+
