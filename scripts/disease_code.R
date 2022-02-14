@@ -1,0 +1,522 @@
+#hypertension data
+
+##Loading library
+library(flexdashboard)
+library(readr)
+library(ggplot2)
+library(plotly)
+library(tidyverse)
+library(dplyr)
+library(fdth)
+library(DT)
+
+##hypertension_age_gender
+hypertension_age_gender<-read_csv("./data/hypertension_age_gender.csv")
+hypertension_age_gender <- hypertension_age_gender %>% 
+  mutate(age = 2020 - hypertension_age_gender$year_of_birth)
+attach(hypertension_age_gender)
+femdata <- hypertension_age_gender[gender=="FEMALE",]
+fd1<- femdata %>% pivot_wider(names_from = gender,values_from = age)
+maledata <- hypertension_age_gender[gender=="MALE",]
+fd2<- maledata %>% pivot_wider(names_from = gender,values_from = age)
+detach(hypertension_age_gender
+)
+attach(fd1)
+fd11<- fdt(fd1$FEMALE,start = 30, end = 110, h = 10)
+fd11<- as.data.frame(fd11)
+colnames(fd11)<- c("class_interval","female_pop")
+fd11 <- fd11 %>% 
+  select("class_interval","female_pop") 
+detach(fd1)
+
+attach(fd2)
+fd22<- fdt(fd2$MALE,start = 30, end = 110, h = 10)
+fd22<- as.data.frame(fd22)
+colnames(fd22)<- c("class_interval","male_pop")
+fd22 <- fd22 %>% 
+  select("class_interval","male_pop")
+detach(fd2)
+
+new_data <- merge(fd11,fd22,by = "class_interval") 
+new_data <- new_data %>%
+  gather('gender','pop',2:3) %>% 
+  mutate(pop_per = case_when(gender == "female_pop"  ~ round(pop/sum(pop)*100,2),
+                             TRUE ~- round(pop/sum(pop)*100,2)),
+         signal= case_when(gender == "female_pop" ~1,
+                           TRUE ~-1)) 
+attach(new_data)
+new_data<- new_data[order(new_data$pop_per),]
+
+age_gender<- ggplot(new_data)+
+  geom_bar(aes(x= class_interval,y=pop_per,fill = gender ),stat = "identity")+
+  coord_flip()+
+  scale_fill_manual(name = "" ,values = c("darkred","steelblue"),labels =c("Female","Male"))+
+  scale_y_continuous(breaks = seq(-22,22,5),labels = function(x)paste(x,"%"))+
+  labs(x="Age_interval",y= "Population (%)",
+       title = "Population Pyramid by sex")+
+  theme(legend.position = "top")
+age_gender
+ggplotly(age_gender)
+
+
+##hypertension_subtype
+hypertension_subtype <- read_csv("./data/hypertension_subtype.csv")
+subtype <- hypertension_subtype%>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Hypertension Patients- Subtype", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+subtype
+
+##Comorbidities
+hypertension_comorbidities<- read_csv("./data/hypertension_comorbidities.csv")
+comorbidities<- hypertension_comorbidities%>% 
+  group_by(label2) %>% 
+  plot_ly(labels = ~label2,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Hypertension Patients- Comorbodities", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+comorbidities
+
+##Symptoms
+hypertension_symptoms <- read_csv("./data/hypertension_symptoms.csv")
+hypertension_symptoms$label<- reorder(x = hypertension_symptoms$label, X= hypertension_symptoms$count)
+hypertension_symptoms$label <- with(hypertension_symptoms, reorder(label, count))
+colnames(hypertension_symptoms)[colnames(hypertension_symptoms)== "label"] <- "Symptoms"
+data <- hypertension_symptoms %>% 
+  #rename(symp= "label")
+  ggplot(aes(x = count, y = Symptoms,fill = Symptoms))+
+  geom_col()+
+  labs(title = "Symptoms of Patients")
+ggplotly(data)
+
+##Drug usage
+hypertension_drug_usage <-read_csv("./data/hypertension_drug_usage.csv")
+drug_usage <- hypertension_drug_usage %>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Hypertension Patients- Drug Usage", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+drug_usage
+
+## Treatment Phase Drug
+
+hypertension_treatment <-read_csv("./data/hypertension_treatment.csv")
+
+treatment<- separate(hypertension_treatment,col = "drug_label",into = c("Phase1","Phase2","Phase3"),sep = ",")
+phase1<-table(treatment$Phase1)
+phase1[phase1==max(phase1)]
+phase2<-table(treatment$Phase2)
+phase2[phase2==max(phase2)]
+phase3<-table(treatment$Phase3)
+phase3[phase3==max(phase3)]
+
+### Treatment Journey
+
+hypertension_treatment_duration<-read_csv("./data/hypertension_treatment_duration.csv")
+treatment<- hypertension_treatment_duration  %>% 
+  mutate(period_in_week =difftime(deend,dest,units = "weeks"))
+table2<- treatment %>% 
+  group_by(drug_label) %>% 
+  summarise(avgw=mean(period_in_week))
+
+
+y<- table2 %>% ggplot(aes(x=drug_label,y=avgw))+
+  geom_bar(stat = "identity",aes(fill = drug_label))+
+  labs(title = "Hypertension Treatment Duration in Weeks(w/Group mean)")
+ggplotly(y) 
+
+
+###Diabetes
+#age_gender
+diabetes_mellitus_age_gender<-read_csv("./data/diabetes_mellitus_age_gender.csv")
+diab <- diabetes_mellitus_age_gender %>% 
+  mutate(age = 2020 - diabetes_mellitus_age_gender$year_of_birth)
+attach(diab)
+femdata <- diab[gender=="FEMALE",]
+fd1<- femdata %>% pivot_wider(names_from = gender,values_from = age)
+maledata <- diab[gender=="MALE",]
+md2<- maledata %>% pivot_wider(names_from = gender,values_from = age)
+detach(diab)
+attach(fd1)
+
+fd11<- fdt(fd1$FEMALE,start = 30, end = 120, h = 11)
+fd11<- as.data.frame(fd11)
+colnames(fd11)<- c("class_interval","female_pop")
+fd11 <- fd11 %>% 
+  select("class_interval","female_pop") 
+detach(fd1)
+
+attach(md2)
+md22<- fdt(md2$MALE,start = 30, end = 120, h = 11)
+md22<- as.data.frame(md22)
+colnames(md22)<- c("class_interval","male_pop")
+md22 <- md22 %>% 
+  select("class_interval","male_pop")
+detach(md2)
+
+new_data <- merge(fd11,md22,by = "class_interval") 
+new_data <- new_data %>%
+  gather('gender','pop',2:3) %>% 
+  mutate(pop_per = case_when(gender == "female_pop"  ~ round(pop/sum(pop)*100,2),
+                             TRUE ~- round(pop/sum(pop)*100,2)),
+         signal= case_when(gender == "female_pop" ~1,
+                           TRUE ~-1)) 
+
+attach(new_data)
+new_data<- new_data[order(new_data$pop_per),]
+
+age_gender<- ggplot(new_data)+
+  geom_bar(aes(x= class_interval,y=pop_per,fill = gender ),stat = "identity")+
+  coord_flip()+
+  scale_fill_manual(name = "" ,values = c("darkred","steelblue"),labels =c("Female","Male"))+
+  scale_y_continuous(breaks = seq(-22,22,5),labels = function(x)paste(x,"%"))+
+  labs(x="Age_interval",y= "Population (%)",
+       title = "Population Pyramid by sex")+
+  theme(legend.position = "top")
+ggplotly(age_gender)
+
+### Sub-types of Disease
+
+
+diabetes_mellitus_subtype<-read_csv("./data/diabetes_mellitus_subtype.csv")
+
+subtype <- diabetes_mellitus_subtype%>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Diabetes Patients- Subtype", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+subtype
+
+datatable(
+  diabetes_mellitus_subtype,
+  extensions = 'Buttons', options = list(
+    dom = 'Bfrtip',
+    buttons = c('copy', 'print')
+  )
+)
+
+### Comorbidities
+
+
+diabetes_mellitus_comorbidities <- read_csv("./data/diabetes_mellitus_comorbidities.csv")
+
+comorbidities<- diabetes_mellitus_comorbidities%>% 
+  group_by(label2) %>% 
+  plot_ly(labels = ~label2,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Diabetes Patients- Comorbodities", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+comorbidities
+
+### Symptoms 
+
+diabetes_mellitus_symptoms <- read_csv("./data/diabetes_mellitus_symptoms.csv")
+diabetes_mellitus_symptoms$label<- reorder(x = diabetes_mellitus_symptoms$label, X= diabetes_mellitus_symptoms$count)
+diabetes_mellitus_symptoms$label <- with(diabetes_mellitus_symptoms, reorder(label, count))
+colnames(diabetes_mellitus_symptoms)[colnames(diabetes_mellitus_symptoms)== "label"] <- "Symptoms"
+data <- diabetes_mellitus_symptoms %>% 
+  #rename(symp= "label")
+  ggplot(aes(x = count, y = Symptoms,fill = Symptoms))+
+  geom_col()+
+  labs(title = "Symptoms of Patients")
+ggplotly(data)
+
+### Drug Usage
+
+
+diabetes_mellitus_drug_usage <- read_csv("./data/diabetes_mellitus_drug_usage.csv")
+drug_usage <- diabetes_mellitus_drug_usage %>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Diabetes Patients- Drug Usage", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+drug_usage
+
+### Treatment Phase Drug
+
+diabetes_mellitus_treatment <- read_csv("./data/diabetes_mellitus_treatment.csv")
+treatment<- separate(diabetes_mellitus_treatment,col = "0",into = c("Phase1","Phase2","Phase3"),sep = ",")
+aa<-table(treatment$Phase1)
+aa[aa==max(aa)]
+bb<-table(treatment$Phase2)
+bb[bb==max(bb)]
+cc<-table(treatment$Phase3)
+cc[cc==max(cc)]
+
+### Treatment Journey
+
+
+diabetes_mellitus_treatment_duration <- read_csv("./data/diabetes_mellitus_duration.csv")
+
+table2<- diabetes_mellitus_treatment_duration %>% 
+  group_by(drug_label) %>% 
+  summarise(avgw=mean(period_in_wk))
+
+barplot(table2$avgw)
+y<- table2 %>% ggplot(aes(x=drug_label,y=avgw))+
+  geom_bar(stat = "identity",aes(fill = drug_label))+
+  labs(title = "Diabetes Treatment Duration in Weeks(w/Group mean)")
+ggplotly(y) 
+
+###Heart disease
+##age-gender
+heart_disease_age_gender <- read_csv("./data/heart_disease_age_gender.csv")
+heart_disease <- heart_disease_age_gender %>% 
+  mutate(age = 2020 - heart_disease_age_gender$year_of_birth)
+attach(heart_disease)
+femdata <- heart_disease[gender=="FEMALE",]
+fd1<- femdata %>% pivot_wider(names_from = gender,values_from = age)
+maledata <- heart_disease[gender=="MALE",]
+md2<- maledata %>% pivot_wider(names_from = gender,values_from = age)
+detach(heart_disease)
+attach(fd1)
+
+fd11<- fdt(fd1$FEMALE,start = 30, end = 120, h = 11)
+fd11<- as.data.frame(fd11)
+colnames(fd11)<- c("class_interval","female_pop")
+fd11 <- fd11 %>% 
+  select("class_interval","female_pop") 
+detach(fd1)
+
+attach(md2)
+md22<- fdt(md2$MALE,start = 30, end = 120, h = 11)
+md22<- as.data.frame(md22)
+colnames(md22)<- c("class_interval","male_pop")
+md22 <- md22 %>% 
+  select("class_interval","male_pop")
+detach(md2)
+
+new_data <- merge(fd11,md22,by = "class_interval") 
+new_data <- new_data %>%
+  gather('gender','pop',2:3) %>% 
+  mutate(pop_per = case_when(gender == "female_pop"  ~ round(pop/sum(pop)*100,2),
+                             TRUE ~- round(pop/sum(pop)*100,2)),
+         signal= case_when(gender == "female_pop" ~1,
+                           TRUE ~-1)) 
+attach(new_data)
+new_data<- new_data[order(new_data$pop_per),]
+
+age_gender<- ggplot(new_data)+
+  geom_bar(aes(x= class_interval,y=pop_per,fill = gender ),stat = "identity")+
+  coord_flip()+
+  scale_fill_manual(name = "" ,values = c("darkred","steelblue"),labels =c("Female","Male"))+
+  scale_y_continuous(breaks = seq(-22,22,5),labels = function(x)paste(x,"%"))+
+  labs(x="Age_interval",y= "Population (%)",
+       title = "Population Pyramid by sex")+
+  theme(legend.position = "top")
+ggplotly(age_gender)
+
+### Sub-types of Disease
+
+
+heart_disease_subtype <- read_csv("./data/heart_disease_subtype.csv")
+subtype <- heart_disease_subtype%>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Heart Patients- Subtype", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+subtype
+
+### Comorbidities
+
+heart_disease_comorbidities <- read_csv("./data/heart_disease_age_gender.csv")
+
+comorbidities<- heart_disease_comorbidities%>% 
+  group_by(label2) %>% 
+  plot_ly(labels = ~label2,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Heart Patients- Comorbodities", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+comorbidities
+
+### Symptoms 
+
+heart_disease_symptoms <- read_csv("./data/heart_disease_symptoms.csv")
+heart_disease_symptoms$label<- reorder(x = heart_disease_symptoms$label, X= heart_disease_symptoms$count)
+heart_disease_symptoms$label <- with(heart_disease_symptoms, reorder(label, count))
+colnames(heart_disease_symptoms)[colnames(heart_disease_symptoms)== "label"] <- "Symptoms"
+data <- heart_disease_symptoms %>% 
+  #rename(symp= "label")
+  ggplot(aes(x = count, y = Symptoms,fill = Symptoms))+
+  geom_col()+
+  labs(title = "Symptoms of Patients")
+ggplotly(data)
+
+### Drug Usage
+
+heart_disease_drug_usage <- read_csv("./data/heart_disease_drug_usage.csv")
+drug_usage <- heart_disease_drug_usage %>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Heart Patients- Drug Usage", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+drug_usage
+
+### Treatment Phase Drug
+
+heart_disease_treatment <- read_csv("./data/heart_disease_treatment.csv")
+treatment<- separate(heart_disease_treatment,col = "0",into = c("Phase1","Phase2","Phase3"),sep = ",")
+phase1<-table(treatment$Phase1)
+phase1[phase1==max(phase1)]
+phase2<-table(treatment$Phase2)
+phase2[phase2==max(phase2)]
+phase3<-table(treatment$Phase3)
+phase3[phase3==max(phase3)]
+
+### Treatment Journey
+
+heart_disease_treatment_duration <- read_csv("./data/heart_disease_treatment_duration.csv")
+
+table2<- heart_disease_treatment_duration %>% 
+  group_by(drug_label) %>% 
+  summarise(avgw=mean(period_in_wk))
+
+y<- table2 %>% ggplot(aes(x=drug_label,y=avgw))+
+  geom_bar(stat = "identity",aes(fill = drug_label))+
+  labs(title = "Heart Disease Treatment Duration in Weeks(w/Group mean)")
+ggplotly(y)
+
+
+### Copd
+## Age Group/ Gender
+copd_age_gender <- read_csv("./data/copd_age_gender.csv")
+copd <- copd_age_gender %>% 
+  mutate(age = 2020 - copd_age_gender$year_of_birth)
+attach(copd)
+femdata <- copd[gender=="FEMALE",]
+fd1<- femdata %>% pivot_wider(names_from = gender,values_from = age)
+maledata <- copd[gender=="MALE",]
+md2<- maledata %>% pivot_wider(names_from = gender,values_from = age)
+detach(copd)
+attach(fd1)
+
+fd11<- fdt(fd1$FEMALE,start = 30, end = 120, h = 11)
+fd11<- as.data.frame(fd11)
+colnames(fd11)<- c("class_interval","female_pop")
+fd11 <- fd11 %>% 
+  select("class_interval","female_pop") 
+detach(fd1)
+
+attach(md2)
+md22<- fdt(md2$MALE,start = 30, end = 120, h = 11)
+md22<- as.data.frame(md22)
+colnames(md22)<- c("class_interval","male_pop")
+md22 <- md22 %>% 
+  select("class_interval","male_pop")
+detach(md2)
+
+new_data <- merge(fd11,md22,by = "class_interval") 
+new_data <- new_data %>%
+  gather('gender','pop',2:3) %>% 
+  mutate(pop_per = case_when(gender == "female_pop"  ~ round(pop/sum(pop)*100,2),
+                             TRUE ~- round(pop/sum(pop)*100,2)),
+         signal= case_when(gender == "female_pop" ~1,
+                           TRUE ~-1)) 
+attach(new_data)
+new_data<- new_data[order(new_data$pop_per),]
+
+age_gender<- ggplot(new_data)+
+  geom_bar(aes(x= class_interval,y=pop_per,fill = gender ),stat = "identity")+
+  coord_flip()+
+  scale_fill_manual(name = "" ,values = c("darkred","steelblue"),labels =c("Female","Male"))+
+  scale_y_continuous(breaks = seq(-22,22,5),labels = function(x)paste(x,"%"))+
+  labs(x="Age_interval",y= "Population (%)",
+       title = "Population Pyramid by sex")+
+  theme(legend.position = "top")
+ggplotly(age_gender)
+
+### Sub-types of Disease
+
+
+copd_subtype <- read_csv("./data/copd_subtype.csv")
+subtype <- copd_subtype%>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Copd Patients- Subtype", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+subtype
+
+### Comorbidities
+
+copd_comorbidities <- read_csv("./data/copd_comorbidities.csv")
+
+comorbidities<- copd_comorbidities%>% 
+  group_by(label2) %>% 
+  plot_ly(labels = ~label2,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Copd Patients- Comorbodities", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+comorbidities
+
+### Symptoms 
+
+
+copd_symptoms <- read_csv("./data/copd_symptoms.csv")
+copd_symptoms$label<- reorder(x = copd_symptoms$label, X= copd_symptoms$count)
+copd_symptoms$label <- with(copd_symptoms, reorder(label, count))
+colnames(copd_symptoms)[colnames(copd_symptoms)== "label"] <- "Symptoms"
+data <- copd_symptoms %>% 
+  #rename(symp= "label")
+  ggplot(aes(x = count, y = Symptoms,fill = Symptoms))+
+  geom_col()+
+  labs(title = "Symptoms of Patients")
+ggplotly(data)
+
+### Drug Usage
+
+copd_drug_usage <- read_csv("./data/copd_drug_usage.csv")
+drug_usage <- copd_drug_usage %>% 
+  group_by(label) %>% 
+  plot_ly(labels = ~label,
+          values = ~count,
+          marker = list(colors = rainbow)) %>% 
+  add_pie(hole = 0.4) %>% 
+  layout(title = "Copd Patients- Drug Usage", xaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F),yaxis = list(zeroline = F,showline = F, showticklabels = F,showgrid = F))
+drug_usage
+
+### Treatment Phase Drug
+
+
+copd_treatment <- read_csv("./data/copd_treatment.csv")
+treatment<- separate(copd_treatment,col = "0",into = c("Phase1","Phase2","Phase3"),sep = ",")
+phase1<-table(treatment$Phase1)
+phase1[phase1==max(phase1)]
+phase2<-table(treatment$Phase2)
+phase2[phase2==max(phase2)]
+phase3<-table(treatment$Phase3)
+phase3[phase3==max(phase3)]
+
+### Treatment Journey
+
+copd_treatment_duration <- read_csv("./data/copd_treatment_duration.csv")
+
+table2<- copd_treatment_duration %>% 
+  group_by(drug_label) %>% 
+  summarise(avgw=mean(period_in_wk))
+
+y<- table2 %>% ggplot(aes(x=drug_label,y=avgw))+
+  geom_bar(stat = "identity",aes(fill = drug_label))+
+  labs(title = "Copd Disease Treatment Duration in Weeks(w/Group mean)")
+ggplotly(y)
+
+
+
