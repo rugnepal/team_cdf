@@ -1,0 +1,268 @@
+---
+title: "SymPUF Data Viz"
+author: "Smriti karki"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: column
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(plotly)
+computeHypertension = function(...) return(1)
+computeDiabetes = function(...) return(2)
+computeHeartdisease = function(...) return(3)
+computeCopd = function(...) return(4)
+```
+# Home
+## column {data-width = 500, .tabset}
+
+### Hypertension
+```{r}
+Hypertension = computeHypertension()
+valueBox(Hypertension, icon = "ion-medkit")
+```
+
+### Diabetes
+```{r}
+Diabetes = computeDiabetes()
+valueBox(Diabetes, icon = "ion-sad-outline")
+```
+
+### Heart Disease
+```{r}
+Heartdisease = computeHeartdisease()
+valueBox(Heartdisease, icon = "ion-heart-broken")
+```
+
+### Copd
+```{r}
+Copd = computeCopd()
+valueBox(Copd, icon = "ion-no-smoking")
+```
+
+
+# Hypertension{data-navmenu="Diseases"}
+## Column {data-width=3000, .tabset}
+-----------------------------------------------------------------------
+
+### Age Group/ Gender
+
+
+```{r}
+age_gender
+ggplotly(age_gender)
+```
+### Sub-types of Disease
+
+```{r}
+subtype
+```
+
+### Comorbidities
+
+```{r}
+comorbidities
+```
+### Symptoms 
+
+```{r}
+ggplotly(data)
+```
+### Drug Usage
+
+```{r}
+drug_usage
+```
+### Treatment Phase Drug
+
+```{r}
+treatment<- separate(hypertension_treatment,col = "drug_label",into = c("Phase1","Phase2","Phase3"),sep = ",")
+phase1<-table(treatment$Phase1)
+phase1[phase1==max(phase1)]
+phase2<-table(treatment$Phase2)
+phase2[phase2==max(phase2)]
+phase3<-table(treatment$Phase3)
+phase3[phase3==max(phase3)]
+```
+### Treatment Journey
+
+```{r}
+ggplotly(y) 
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+# Diabetes{data-navmenu="Diseases"}
+## Column {data-width=3000, .tabset}
+-----------------------------------------------------------------------
+
+
+```{r}
+#hypertension_age_gender<-read_csv("C:/Users/Dell/Downloads/hypertension/hypertension_age_gender.csv")
+#datatable(hypertension_age_gender,
+          #options = list(pagebreak = 25))
+```
+
+
+### Age Group/ Gender
+
+
+```{r}
+ggplotly(age_gender)
+
+```
+### Sub-types of Disease
+
+```{r}
+
+subtype
+
+```
+### Comorbidities
+
+```{r}
+comorbidities
+```
+### Symptoms 
+
+```{r}
+ggplotly(data)
+```
+### Drug Usage
+
+```{r}
+drug_usage
+```
+### Treatment Phase Drug
+
+```{r}
+treatment<- separate(diabetes_mellitus_treatment,col = "0",into = c("Phase1","Phase2","Phase3"),sep = ",")
+aa<-table(treatment$Phase1)
+aa[aa==max(aa)]
+bb<-table(treatment$Phase2)
+bb[bb==max(bb)]
+cc<-table(treatment$Phase3)
+cc[cc==max(cc)]
+```
+### Treatment Journey
+
+```{r}
+ggplotly(y) 
+ 
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+# Heart Disease{data-navmenu="Diseases"}
+## Column {data-width=3000, .tabset}
+-----------------------------------------------------------------------
+
+### Age Group/ Gender
+
+
+```{r}
+ggplotly(age_gender)
+```
+### Sub-types of Disease
+
+```{r}
+subtype
+```
+### Comorbidities
+
+```{r}
+comorbidities
+```
+### Symptoms 
+
+```{r}
+ggplotly(data)
+```
+### Drug Usage
+
+```{r}
+drug_usage
+```
+### Treatment Phase Drug
+
+```{r}
+treatment<- separate(heart_disease_treatment,col = "0",into = c("Phase1","Phase2","Phase3"),sep = ",")
+phase1<-table(treatment$Phase1)
+phase1[phase1==max(phase1)]
+phase2<-table(treatment$Phase2)
+phase2[phase2==max(phase2)]
+phase3<-table(treatment$Phase3)
+phase3[phase3==max(phase3)]
+```
+### Treatment Journey
+
+```{r}
+ggplotly(y)
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+# Copd{data-navmenu="Diseases"}
+## Column {data-width=3000, .tabset}
+-----------------------------------------------------------------------
+
+
+### Age Group/ Gender
+
+
+```{r}
+ggplotly(age_gender)
+```
+### Sub-types of Disease
+
+```{r}
+subtype
+```
+### Comorbidities
+
+```{r}
+comorbidities
+```
+### Symptoms 
+
+```{r}
+ggplotly(data)
+```
+### Drug Usage
+
+```{r}
+drug_usage
+```
+### Treatment Phase Drug
+
+```{r}
+treatment<- separate(copd_treatment,col = "0",into = c("Phase1","Phase2","Phase3"),sep = ",")
+phase1<-table(treatment$Phase1)
+phase1[phase1==max(phase1)]
+phase2<-table(treatment$Phase2)
+phase2[phase2==max(phase2)]
+phase3<-table(treatment$Phase3)
+phase3[phase3==max(phase3)]
+```
+### Treatment Journey
+
+```{r}
+ggplotly(y)
+```
+
+
+
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+
+
