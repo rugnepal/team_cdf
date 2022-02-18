@@ -1,0 +1,44 @@
+---
+title: "Project Report"
+author: "Smriti karki"
+date: "2/14/2022"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Acknowledgement
+
+I would like to express my special thanks to the organization **"Numeric Mind"** for organizing the data fellowship program and providing this golden opportunity to learn and do data-related project in R.
+
+I would also like to extend my gratitude to our mentor **"Binod Jung Bogati"**, whose valuable guidance and suggestions has been helpful to complete this project. 
+
+## Abstract
+In this project, I tried to make dashboard on different diseases like hypertension, diabetes etc. The dashboard shows the symptoms, treatment of disease through visualization. The study helped to examine which drug is mostly used in different phases of treatment for different diseases.
+
+## Introduction
+A dashboard is graphical representation of our data. It helps in better understanding. For creating dashboard, I have used hypertension, diabetes, heart diseases and Copd data. 
+
+## Methodology
+The dashboard is constructed using the "flexdashboard" package in R. For making different graphical plots, "ggplot2" and "plotly" packages are used. It helps in making visualization better.
+
+## Conclusion 
+Population pyramid is constructed to see how population(ie diseased population) are distributed by age group and gender.Donot chart is made to depict Sub-type, comorbidities and drug usage of diseases. Bar graph is made for symptoms and treatment journey of diseases. By calculating the mode, we find out which drug is mostly taken for different diseases.
+
+## Figures 
+
+![Symptoms of diseases](images/symptoms.png)
+
+![Treatment duration of diseases](images/treatment_durationplot.png)
+
+![Drug Usage](images/drug_usage.png)
+
+[links](https://github.com/rugnepal/team_cdf/)
+
+
+
